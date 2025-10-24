@@ -21,7 +21,7 @@ def load_data():
     
     try:
         df_stock = pd.read_excel('Stock.xlsx')
-        df_residencial = pd.read_excel(r"BD residencial\BD_Master_Residencial.xlsx")
+        df_residencial = pd.read_excel(r"BD_Master_Residencial.xlsx")
         df_oc = pd.read_excel("OPOR.xlsx")
         df_consumo = pd.read_excel('ST_OWTR.xlsx')
         print("Archivos 'Stock', 'OPOR' y 'ST_OWTR' cargados.")
@@ -60,4 +60,5 @@ def load_data():
     
 
     return df_stock, df_oc, df_consumo, df_residencial
+
 
