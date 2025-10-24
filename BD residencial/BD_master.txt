@@ -1,0 +1,1 @@
+=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1XW1mcoJKGS7JGK71VAQNcEcu3vuFP9ihu8ooK85GlGo/edit?gid=0#gid=0";"BD!A1:C1872")
