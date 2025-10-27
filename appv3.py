@@ -1,171 +1,191 @@
-# --- ARCHIVO: app.py ---
-# (Guarda este archivo como app.py)
-# 
-# Para ejecutar la aplicación, abre tu terminal y escribe:
-# streamlit run app.py
+# --- ARCHIVO: appv3.py ---
+# (Guarda este archivo como app.py y ejecútalo con: streamlit run app.py)
 
 import streamlit as st
 import pandas as pd
-import numpy as np
-import config       # Importa tu archivo de configuración
-import simulator    # Importa la lógica de tu simulador
+import config         # Importa constantes
+import data_loader    # Importa la carga de datos
+import simulator      # Importa el motor de simulación
+import ui_helpers     # Importa las funciones de gráficos y métricas
 
-# --- 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO DE SESIÓN ---
-
-# Configura el layout de la página para que sea ancho
-st.set_page_config(layout="wide", page_title="Gestión de Inventario")
-
-# Inicializa el 'estado de sesión' para saber en qué página estamos.
-# Si no existe 'page', la definimos como 'inicio'.
-if 'page' not in st.session_state:
-    st.session_state.page = 'inicio'
-
-# --- 2. FUNCIONES PARA CAMBIAR DE PÁGINA ---
-
-# Estas funciones se llamarán cuando se presionen los botones del menú.
-# Simplemente cambian el valor de 'page' en el estado de la sesión.
-
-def go_to_home():
-    """Navega a la página de inicio."""
-    st.session_state.page = 'inicio'
-
-def go_to_simulator():
-    """Navega a la página del simulador."""
-    st.session_state.page = 'simulador'
+# ---------------------------------------------------------------------
+# --- 1. LÓGICA DE LA PÁGINA DEL SIMULADOR ---
+# ---------------------------------------------------------------------
+def show_simulator():
+    """
+    Función que construye y ejecuta la interfaz de usuario del simulador.
+    """
     
-# (Aquí puedes agregar más funciones para futuras páginas)
-# def go_to_otra_pagina():
-#     st.session_state.page = 'otra_pagina'
+    # --- Configuración de Idioma y Título del Simulador ---
+    ui_helpers.setup_locale() # Configura meses en español
+    st.title("Simulador de Proyección de Inventario 📈")
 
-# --- 3. DIBUJAR EL MENÚ EN LA BARRA LATERAL (SIDEBAR) ---
+    # Botón para volver al menú en la barra lateral
+    st.sidebar.button("⬅️ Volver al Menú Principal", on_click=lambda: st.session_state.update(page='menu'))
+    st.sidebar.markdown("---") # Separador
 
-st.sidebar.title("Menú de Navegación")
-st.sidebar.markdown("---")
+    # --- 2. Carga de Datos ---
+    # Manejamos el error de "Archivo no encontrado" aquí
+    try:
+        df_stock, df_oc, df_consumo, df_residencial = data_loader.load_data()
+    except FileNotFoundError as e:
+        st.error(f"Error Crítico: No se pudo encontrar el archivo: {e.filename}.")
+        st.info("Por favor, asegúrese de que los archivos 'Stock.xlsx', 'OPOR.xlsx' y 'ST_OWTR.xlsx' estén en la misma carpeta que 'app.py'.")
+        st.stop() # Detiene la ejecución de la app si faltan archivos
+    except Exception as e:
+        st.error(f"Ocurrió un error inesperado durante la carga de datos: {e}")
+        st.stop()
 
-# Creamos los botones del menú. 
-# on_click llama a la función correspondiente para cambiar de página.
-st.sidebar.button("🏠 Inicio", on_click=go_to_home, use_container_width=True)
-st.sidebar.button("🚀 SIMULADOR", on_click=go_to_simulator, use_container_width=True)
+    # --- 3. Construcción de la Barra Lateral (Sidebar) ---
+    st.sidebar.header("Configuración de Simulación")
 
-# (Aquí puedes agregar los nuevos botones que quieras en el futuro)
-# st.sidebar.button("📊 Dashboard", on_click=go_to_otra_pagina, use_container_width=True)
-
-# --- 4. FUNCIONES QUE DIBUJAN CADA PÁGINA ---
-
-def show_home_page():
-    """Muestra el contenido de la página de Inicio."""
-    st.title("Bienvenido al Sistema de Gestión de Inventario 📈")
-    st.markdown("---")
-    st.header("Herramientas Disponibles:")
-    st.subheader("🚀 Simulador de Inventario")
-    st.write("Proyecta el comportamiento de tu inventario, calcula el Stock de Seguridad y el Punto de Reorden basado en datos históricos.")
-    st.write("---")
-    st.info("Selecciona 'SIMULADOR' en el menú de la izquierda para comenzar.")
-
-def show_simulator_page():
-    """Muestra el contenido de la página del Simulador (tu app actual)."""
+    # --- Listas para selectores ---
+    lista_skus_stock = df_stock['CodigoArticulo'].dropna().unique()
+    lista_skus_consumo = df_consumo['CodigoArticulo'].dropna().unique()
+    all_skus = sorted(list(set(lista_skus_stock) | set(lista_skus_consumo)))
     
-    st.title("🚀 Simulador de Inventario")
-    st.write("Esta herramienta utiliza datos históricos de consumo y órdenes de compra para simular el inventario futuro y calcular métricas clave.")
-    st.markdown("---")
+    lista_bodegas_stock = sorted(df_stock['CodigoBodega'].dropna().unique())
+    lista_bodegas_consumo = sorted(df_consumo['BodegaDestino_Requerida'].dropna().unique())
     
-    # --- Aquí va toda la interfaz de tu aplicación actual ---
-    # (He creado una interfaz de ejemplo basada en tu función)
-
-    st.header("1. Carga de Archivos")
-    st.info("Carga los 3 archivos CSV con los datos de Stock, Consumo y Órdenes de Compra (OC).")
+    # --- Requerimiento 2: Selector de SKU (usando ui_helper) ---
+    opciones_selector_sku, mapa_nombres, default_index = ui_helpers.create_sku_options(all_skus, df_stock)
     
-    col_files_1, col_files_2, col_files_3 = st.columns(3)
-    with col_files_1:
-        uploaded_stock = st.file_uploader("Cargar DF Stock (df_stock_raw)", type=["csv", "xlsx"])
-    with col_files_2:
-        uploaded_consumo = st.file_uploader("Cargar DF Consumo (df_consumo_raw)", type=["csv", "xlsx"])
-    with col_files_3:
-        uploaded_oc = st.file_uploader("Cargar DF Órdenes de Compra (df_oc_raw)", type=["csv", "xlsx"])
-
-    st.markdown("---")
-    st.header("2. Parámetros de Simulación")
-
-    col_params_1, col_params_2, col_params_3 = st.columns(3)
-    with col_params_1:
-        st.subheader("Identificación")
-        sku_to_simulate = st.text_input("SKU a Simular", "SKU-EJEMPLO-001")
-        warehouse_code = st.text_input("Código de Bodega (Stock)", "BF0001")
-        consumption_warehouse = st.text_input("Bodega de Consumo", "BC0001")
-        
-    with col_params_2:
-        st.subheader("Parámetros de Tiempo")
-        simulation_days = st.number_input("Días a Simular", min_value=90, max_value=730, value=365)
-        lead_time_days = st.number_input("Lead Time (días)", min_value=1, max_value=120, value=30)
-        
-    with col_params_3:
-        st.subheader("Nivel de Servicio")
-        # Z-Score para 95% de Nivel de Servicio
-        service_level_z = st.slider("Nivel de Servicio (Z-Score)", 
-                                    min_value=1.0, max_value=3.0, 
-                                    value=1.65, step=0.01)
-        st.caption(f"Valor 1.65 equivale a ~95% N.S.")
-
-    st.markdown("---")
+    sku_seleccionado_formateado = st.sidebar.selectbox(
+        "1. Seleccione un SKU (busque por código o nombre):",
+        opciones_selector_sku, 
+        index=default_index
+    )
+    sku_seleccionado = sku_seleccionado_formateado.split(" | ")[0]
     
-    # Botón para ejecutar la simulación
-    if st.button("▶️ Ejecutar Simulación", use_container_width=True, type="primary"):
-        if uploaded_stock and uploaded_consumo and uploaded_oc:
+    # --- Otros Selectores ---
+    bodega_stock_sel = st.sidebar.selectbox(
+        "2. Seleccione Bodega de Stock:",
+        lista_bodegas_stock,
+        index=lista_bodegas_stock.index('BF0001') if 'BF0001' in lista_bodegas_stock else 0
+    )
+    
+    bodega_consumo_sel = st.sidebar.selectbox(
+        "3. Seleccione Bodega de Consumo:",
+        lista_bodegas_consumo,
+        index=lista_bodegas_consumo.index('Bodega de Proyectos RE') if 'Bodega de Proyectos RE' in lista_bodegas_consumo else 0
+    )
+    
+    st.sidebar.markdown("---")
+    
+    # --- Parámetros de Simulación ---
+    service_level_str = st.sidebar.select_slider(
+        "4. Nivel de Servicio (para Safety Stock):",
+        options=list(config.Z_SCORE_MAP.keys()),
+        value="95%"
+    )
+    service_level_z = config.Z_SCORE_MAP[service_level_str]
+    
+    # --- CORRECCIÓN: Variable renombrada a lead_time_days ---
+    lead_time_days = st.sidebar.number_input("5. Lead Time (Días):", min_value=1, max_value=120, value=90)
+    
+    dias_a_simular = st.sidebar.number_input("6. Días a Simular:", min_value=30, max_value=365, value=90)
+    
+    
+    # --- 4. Disparador de Ejecución ---
+    if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
+        with st.spinner("Calculando simulación..."):
             
-            # Cargar los datos (Implementación de ejemplo, ajusta según tu formato)
-            try:
-                df_stock_raw = pd.read_csv(uploaded_stock) if uploaded_stock.name.endswith('csv') else pd.read_excel(uploaded_stock)
-                df_consumo_raw = pd.read_csv(uploaded_consumo) if uploaded_consumo.name.endswith('csv') else pd.read_excel(uploaded_consumo)
-                df_oc_raw = pd.read_csv(uploaded_oc) if uploaded_oc.name.endswith('csv') else pd.read_excel(uploaded_oc)
-                
-                with st.spinner("Procesando datos y ejecutando simulación... Por favor espera."):
-                    # Llamamos a la función de lógica desde simulator.py
-                    df_sim, metrics, llegadas_map = simulator.run_inventory_simulation(
-                        sku_to_simulate=sku_to_simulate,
-                        warehouse_code=warehouse_code,
-                        consumption_warehouse=consumption_warehouse,
-                        df_stock_raw=df_stock_raw,
-                        df_consumo_raw=df_consumo_raw,
-                        df_oc_raw=df_oc_raw,
-                        simulation_days=simulation_days,
-                        lead_time_days=lead_time_days,
-                        service_level_z=service_level_z
-                    )
-                
-                st.success("¡Simulación completada con éxito!")
-                st.balloons()
-                
-                # --- Mostrar Resultados ---
-                st.header("Resultados de la Simulación")
-                
-                st.subheader("Métricas Clave Calculadas")
-                col_metrics_1, col_metrics_2, col_metrics_3 = st.columns(3)
-                col_metrics_1.metric("Stock de Seguridad (SS)", f"{metrics['safety_stock']:.2f} un.")
-                col_metrics_2.metric("Punto de Reorden (ROP)", f"{metrics['reorder_point']:.2f} un.")
-                col_metrics_3.metric("Stock Inicial", f"{metrics['initial_stock']:.2f} un.")
-                
-                st.subheader("Gráfico de Proyección de Inventario")
-                st.line_chart(df_sim['NivelInventario'])
-                
-                st.subheader("Detalle de Métricas")
-                st.json(metrics) # Muestra todas las métricas en formato JSON
+            # --- A. Ejecutar Simulación ---
+            # (Usamos la lógica original del simulador)
+            df_sim, metrics, llegadas_map = simulator.run_inventory_simulation(
+                sku_to_simulate=sku_seleccionado,
+                warehouse_code=bodega_stock_sel,
+                consumption_warehouse=bodega_consumo_sel,
+                df_stock_raw=df_stock,
+                df_consumo_raw=df_consumo,
+                df_oc_raw=df_oc,
+                simulation_days=dias_a_simular,
+                lead_time_days=lead_time_days,
+                service_level_z=service_level_z
+            )
+            
+            # --- B. Mostrar Métricas ---
+            st.subheader(f"Resultados para: {sku_seleccionado}")
+            st.caption(f"Nombre: {mapa_nombres.get(sku_seleccionado, 'N/A')}")
+            ui_helpers.display_metrics(metrics, lead_time_days, service_level_z)
+            
+            # --- C. NUEVO: Mostrar Recomendación de Pedido ---
+            st.markdown("---") # Separador
+            ui_helpers.display_order_recommendation(metrics, llegadas_map)
+            # --- FIN DE LA NUEVA SECCIÓN ---
 
-            except Exception as e:
-                st.error(f"Ocurrió un error durante la simulación: {e}")
-                st.exception(e)
-        else:
-            st.warning("⚠️ Por favor, carga los 3 archivos de datos para poder ejecutar la simulación.")
+            st.markdown("---") # Separador
+            
+            # --- D. Generar y Mostrar Gráfico ---
+            sku_name = mapa_nombres.get(sku_seleccionado, sku_seleccionado)
+            fig = ui_helpers.generate_simulation_plot(
+                df_sim, 
+                metrics, 
+                llegadas_map, 
+                sku_name, 
+                dias_a_simular
+            )
+            st.pyplot(fig)
+            
+            # --- E. Mostrar Tabla Fin de Mes (Req. 3) ---
+            df_tabla_resultados = ui_helpers.prepare_end_of_month_table(df_sim)
+            st.subheader("Stock Simulado a Fin de Mes")
+            st.dataframe(df_tabla_resultados, use_container_width=True, hide_index=True)
+            
+    else:
+        # Mensaje de bienvenida inicial
+        st.info("Ajuste los parámetros en la barra lateral y presione 'Ejecutar Simulación'")
 
-# --- 5. LÓGICA PRINCIPAL PARA MOSTRAR LA PÁGINA CORRECTA ---
+# ---------------------------------------------------------------------
+# --- 2. LÓGICA DE LA PÁGINA DEL MENÚ PRINCIPAL ---
+# ---------------------------------------------------------------------
+def show_main_menu():
+    """
+    Muestra la pantalla del menú principal.
+    """
+    st.title("Menú Principal de Abastecimiento")
+    st.markdown("Seleccione la herramienta que desea utilizar:")
+    
+    st.write("") # Espacio
+    
+    # Botón para ir al simulador
+    if st.button("📈 Simulador de Proyección de Inventario", type="primary"):
+        st.session_state.page = 'simulator'
+        st.rerun() # Forzar la recarga de la app para cambiar de página
 
-# Este es el "enrutador" principal.
-# Revisa el valor de 'st.session_state.page' y llama a la función
-# que dibuja la página correspondiente.
+    # --- PRÓXIMAMENTE ---
+    # Aquí puedes agregar más botones en el futuro
+    st.write("") # Espacio
+    st.button("📊 Dashboard de Ventas (Próximamente)", disabled=True)
+    st.button("⚙️ Configuración (Próximamente)", disabled=True)
 
-if st.session_state.page == 'inicio':
-    show_home_page()
-elif st.session_state.page == 'simulador':
-    show_simulator_page()
-# (Aquí puedes agregar los 'elif' para tus futuras páginas)
-# elif st.session_state.page == 'otra_pagina':
-#     show_otra_pagina()
+# ---------------------------------------------------------------------
+# --- PUNTO DE ENTRADA PRINCIPAL (MAIN) ---
+# ---------------------------------------------------------------------
+def main():
+    """
+    Función principal que enruta a la página correcta.
+    """
+    
+    # --- 1. Configuración de la Página (Debe ser lo primero) ---
+    st.set_page_config(layout="wide")
+
+    # --- 2. Inicialización del Estado de Página ---
+    # Si 'page' no existe en el estado de la sesión, lo inicializamos en 'menu'
+    if 'page' not in st.session_state:
+        st.session_state.page = 'menu'
+
+    # --- 3. Enrutamiento de Página (Page Routing) ---
+    # Cargar la página correspondiente según el estado
+    if st.session_state.page == 'simulator':
+        show_simulator()
+    elif st.session_state.page == 'menu':
+        show_main_menu()
+    else:
+        # Por si acaso, volver al menú si el estado es inválido
+        st.session_state.page = 'menu'
+        show_main_menu()
+
+# --- Punto de Entrada de Ejecución ---
+if __name__ == "__main__":
+    main()
