@@ -134,10 +134,6 @@ def main():
 
             st.markdown("---") # Separador
 
-
-}
-
-
             # --- E. Mostrar Tabla Fin de Mes (Req. 3) ---
             df_tabla_resultados = ui_helpers.prepare_end_of_month_table(df_sim)
             st.subheader("Stock Simulado a Fin de Mes")
@@ -151,3 +147,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
