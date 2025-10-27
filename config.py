@@ -45,7 +45,11 @@ MAPEO_SKUS = {
     # Inversores
     # inversores ongrid 1p5kw solis EXI-008660 
     'EXI-007037': 'EXI-008660', # huawei anterior 5Kw
+    #Inversores 25KTL HUAWEI C&I
+    'EXI-006082': 'EXI-009219', # huawei anterior 25Kw
+
     # Baterias 
     # 5wkp 006594
     'EXI-009496': 'EXI-006594', # huawei anterior 5Kw
 }
+
