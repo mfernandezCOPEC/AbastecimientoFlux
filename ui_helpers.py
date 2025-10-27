@@ -198,4 +198,50 @@ def display_order_recommendation(metrics, llegadas_map):
     elif is_below_rop and suggested_order_qty == 0:
         st.warning(f"**Alerta:** La posición de inventario ({inventory_position:,.0f}) está por debajo del ROP, pero ya supera el Nivel Objetivo. No se sugiere un nuevo pedido.")
     else:
+
         st.info(f"**No se necesita pedido.** La posición de inventario ({inventory_position:,.0f}) está por encima del Punto de Reorden ({rop:,.0f}).")
+
+
+# --- NUEVA FUNCIÓN ---
+def display_arrival_details(df_llegadas_detalle):
+    """
+    Muestra una tabla con el detalle de las próximas llegadas (OCs).
+    """
+    st.subheader("Detalle de Próximas Llegadas (OC)")
+    
+    # Asumimos que la columna de OC se llama 'Número de documento'.
+    # Si se llama de otra forma en tu Excel 'OPOR.xlsx', 
+    # tendrías que cambiar el string 'Número de documento' aquí.
+    columna_oc = 'Número de documento' 
+    
+    if columna_oc not in df_llegadas_detalle.columns:
+        st.error(f"Error: La columna '{columna_oc}' no se encontró en el archivo OPOR.")
+        st.info("No se puede mostrar el detalle de OCs. Verifica el nombre de la columna en 'ui_helpers.py'.")
+        return
+
+    if df_llegadas_detalle.empty:
+        st.info("No hay órdenes de compra programadas para este SKU.")
+    else:
+        # Seleccionamos, renombramos y ordenamos las columnas para mostrar
+        df_display = df_llegadas_detalle[[
+            'Fecha de entrega de la línea', 
+            columna_oc, 
+            'Cantidad'
+        ]].copy()
+        
+        df_display.rename(columns={
+            'Fecha de entrega de la línea': 'Fecha Llegada',
+            columna_oc: 'N° Orden Compra',
+            'Cantidad': 'Cantidad'
+        }, inplace=True)
+        
+        df_display = df_display.sort_values(by='Fecha Llegada')
+        
+        # Formatear para mejor visualización
+        df_display['Fecha Llegada'] = df_display['Fecha Llegada'].dt.strftime('%Y-%m-%d')
+        df_display['Cantidad'] = df_display['Cantidad'].apply(lambda x: f"{x:,.0f}")
+        
+        # Mostramos la tabla
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+
+
