@@ -86,7 +86,7 @@ def main():
         with st.spinner("Calculando simulación..."):
             
             # --- A. Ejecutar Simulación ---
-            df_sim, metrics, llegadas_map = simulator.run_inventory_simulation(
+            df_sim, metrics, llegadas_map, df_llegadas_detalle = simulator.run_inventory_simulation(
                 sku_to_simulate=sku_seleccionado,
                 warehouse_code=bodega_stock_sel,
                 consumption_warehouse=bodega_consumo_sel,
@@ -108,8 +108,6 @@ def main():
             ui_helpers.display_order_recommendation(metrics, llegadas_map)
             # --- FIN DE LA NUEVA SECCIÓN ---
 
-            st.markdown("---") # Separador
-            
             # --- D. Generar y Mostrar Gráfico ---
             sku_name = mapa_nombres.get(sku_seleccionado, sku_seleccionado)
             fig = ui_helpers.generate_simulation_plot(
@@ -120,7 +118,26 @@ def main():
                 dias_a_simular
             )
             st.pyplot(fig)
+
+            # --- D. NUEVO: Mostrar Detalle de Llegadas ---
+            # AGREGA ESTAS LÍNEAS
+            st.markdown("---") # Separador
+            ui_helpers.display_arrival_details(df_llegadas_detalle)
+            # --- FIN DE LA NUEVA SECCIÓN ---
+
+
+            st.markdown("---") # Separador
             
+            # --- E. Generar y Mostrar Gráfico --- (era D)
+            sku_name = mapa_nombres.get(sku_seleccionado, sku_seleccionado)
+            # ... (resto del código) ...
+
+            st.markdown("---") # Separador
+
+
+}
+
+
             # --- E. Mostrar Tabla Fin de Mes (Req. 3) ---
             df_tabla_resultados = ui_helpers.prepare_end_of_month_table(df_sim)
             st.subheader("Stock Simulado a Fin de Mes")
@@ -132,4 +149,5 @@ def main():
 
 # --- Punto de Entrada Principal ---
 if __name__ == "__main__":
+
     main()
