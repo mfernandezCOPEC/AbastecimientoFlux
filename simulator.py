@@ -166,7 +166,7 @@ def run_inventory_simulation(
         if daily_demand_std > 0:
             # Genera un consumo aleatorio basado en la media y std (distribución normal)
             # (Corregido: 'scale' debe ser 'daily_demand_std')
-            daily_consumption = np.random.normal(loc=daily_demand_mean, scale=daily_demand_std)
+            daily_consumption = np.random.normal(loc=daily_demand_mean, scale=0) #, scale=daily_demand_std)
         else:
             # Si no hay std (datos insuficientes), usa la media como consumo determinístico
             daily_consumption = daily_demand_mean
@@ -199,3 +199,4 @@ def run_inventory_simulation(
     }
 
     return df_sim, metrics, llegadas_map, df_llegadas_detalle
+
