@@ -171,15 +171,9 @@ def run_inventory_simulation(
             # Si no hay std (datos insuficientes), usa la media como consumo determinístico
             daily_consumption = daily_demand_mean
             
-        # Asegura que el consumo no sea negativo
         daily_consumption = max(0, daily_consumption)
-        
-        # 4. Restar el consumo del inventario
         inventory_level -= daily_consumption
-        
-        # 5. Asegurar que el inventario no sea negativo (no se puede tener stock < 0)
-        inventory_level = max(0, inventory_level)
-            
+        # inventory_level = max(0, inventory_level) # <-- LÍNEA ELIMINADA O COMENTADA, esa antes evitaba que existiera backlog
     # Crea el DataFrame final de la simulación
     df_sim = pd.DataFrame({'NivelInventario': history_list}, index=pd.Index(date_list, name='Fecha'))
 
@@ -199,4 +193,5 @@ def run_inventory_simulation(
     }
 
     return df_sim, metrics, llegadas_map, df_llegadas_detalle
+
 
