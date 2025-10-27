@@ -131,18 +131,20 @@ def run_inventory_simulation(
         print(f"Error limpiando df_oc: {e}.") # Manejo básico de errores
 
     # Filtra OC relevantes: mismo SKU, cantidad positiva, y fecha futura
-    df_oc_filtered = df_oc_clean[
+# --- E. CÁLCULO DE LLEGADAS (OC) ---
+# ... (código de limpieza de df_oc_clean) ...
+
+    # CAMBIA 'df_oc_filtered' POR 'df_llegadas_detalle'
+    df_llegadas_detalle = df_oc_clean[
         (df_oc_clean['Número de artículo'] == sku_to_simulate) &
         (df_oc_clean['Cantidad'] > 0) & 
         (df_oc_clean['Fecha de entrega de la línea'] >= today)
     ]
     
-    # Agrupa llegadas por si varias OC llegan el mismo día
-    llegadas_por_fecha = df_oc_filtered.groupby('Fecha de entrega de la línea')['Cantidad'].sum() 
-    
-    # Convierte a un diccionario {fecha: cantidad} para búsqueda rápida en la simulación
+    # Usa la nueva variable para calcular el mapa
+    llegadas_por_fecha = df_llegadas_detalle.groupby('Fecha de entrega de la línea')['Cantidad'].sum() 
     llegadas_map = llegadas_por_fecha.to_dict()
-
+    
     # --- F. EJECUTAR SIMULACIÓN DÍA A DÍA ---
     
     inventory_level = initial_stock
@@ -196,4 +198,4 @@ def run_inventory_simulation(
         'demand_M_3': (start_of_M_minus_3.strftime('%B').capitalize(), demand_M_3),
     }
 
-    return df_sim, metrics, llegadas_map
+    return df_sim, metrics, llegadas_map, df_llegadas_detalle
