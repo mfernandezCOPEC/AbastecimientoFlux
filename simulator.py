@@ -109,7 +109,7 @@ def run_inventory_simulation(
         inventory_level += llegadas_map.get(current_date, 0)
         
         if daily_demand_std > 0:
-            daily_consumption = np.random.normal(loc=daily_demand_mean, scale=daily_demand_std)
+            daily_consumption = np.random.normal(loc=daily_demand_mean, scale= 0) #scale=daily_demand_std)
         else:
             daily_consumption = daily_demand_mean
             
@@ -132,4 +132,5 @@ def run_inventory_simulation(
         'demand_M_3': (start_of_M_minus_3.strftime('%B').capitalize(), demand_M_3),
     }
     
+
     return df_sim, metrics, llegadas_map
