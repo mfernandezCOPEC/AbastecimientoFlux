@@ -91,8 +91,9 @@ def show_simulator():
         with st.spinner("Calculando simulación..."):
             
             # --- A. Ejecutar Simulación ---
-            # (Usamos la lógica original del simulador)
-            df_sim, metrics, llegadas_map = simulator.run_inventory_simulation(
+            # ----- INICIO DE LA CORRECCIÓN -----
+            # Ahora recibimos 4 valores, no 3
+            df_sim, metrics, llegadas_map, df_llegadas_detalle = simulator.run_inventory_simulation(
                 sku_to_simulate=sku_seleccionado,
                 warehouse_code=bodega_stock_sel,
                 consumption_warehouse=bodega_consumo_sel,
@@ -103,6 +104,7 @@ def show_simulator():
                 lead_time_days=lead_time_days,
                 service_level_z=service_level_z
             )
+            # ----- FIN DE LA CORRECCIÓN -----
             
             # --- B. Mostrar Métricas ---
             st.subheader(f"Resultados para: {sku_seleccionado}")
@@ -113,10 +115,16 @@ def show_simulator():
             st.markdown("---") # Separador
             ui_helpers.display_order_recommendation(metrics, llegadas_map)
             # --- FIN DE LA NUEVA SECCIÓN ---
+            
+            # --- D. NUEVO: Mostrar Detalle de Llegadas ---
+            # (Agregamos esta sección que faltaba en la versión del menú)
+            st.markdown("---") # Separador
+            ui_helpers.display_arrival_details(df_llegadas_detalle)
+            # --- FIN DE LA NUEVA SECCIÓN ---
 
             st.markdown("---") # Separador
             
-            # --- D. Generar y Mostrar Gráfico ---
+            # --- E. Generar y Mostrar Gráfico ---
             sku_name = mapa_nombres.get(sku_seleccionado, sku_seleccionado)
             fig = ui_helpers.generate_simulation_plot(
                 df_sim, 
@@ -127,7 +135,7 @@ def show_simulator():
             )
             st.pyplot(fig)
             
-            # --- E. Mostrar Tabla Fin de Mes (Req. 3) ---
+            # --- F. Mostrar Tabla Fin de Mes (Req. 3) ---
             df_tabla_resultados = ui_helpers.prepare_end_of_month_table(df_sim)
             st.subheader("Stock Simulado a Fin de Mes")
             st.dataframe(df_tabla_resultados, use_container_width=True, hide_index=True)
