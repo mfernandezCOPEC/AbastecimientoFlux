@@ -63,14 +63,49 @@ def display_metrics(metrics, lead_time_days, service_level_z):
     st.subheader("Consumo Histórico Reciente")
     col1, col2, col3, col4 = st.columns(4)
     
-    col1.metric(f"Demanda {metrics['demand_M_0'][0]} (Actual)", f"{metrics['demand_M_0'][1]:,.0f}")
-    col2.metric(f"Demanda {metrics['demand_M_1'][0]}", f"{metrics['demand_M_1'][1]:,.0f}")
-    col3.metric(f"Demanda {metrics['demand_M_2'][0]}", f"{metrics['demand_M_2'][1]:,.0f}")
-    col4.metric(f"Demanda {metrics['demand_M_3'][0]}", f"{metrics['demand_M_3'][1]:,.0f}")
+    # --- MODIFICACIÓN AQUÍ ---
+    # Ahora metrics[...][0] es una fecha, la formateamos con .strftime()
+    col1.metric(f"Demanda {metrics['demand_M_0'][0].strftime('%B').capitalize()} (Actual)", f"{metrics['demand_M_0'][1]:,.0f}")
+    col2.metric(f"Demanda {metrics['demand_M_1'][0].strftime('%B').capitalize()}", f"{metrics['demand_M_1'][1]:,.0f}")
+    col3.metric(f"Demanda {metrics['demand_M_2'][0].strftime('%B').capitalize()}", f"{metrics['demand_M_2'][1]:,.0f}")
+    col4.metric(f"Demanda {metrics['demand_M_3'][0].strftime('%B').capitalize()}", f"{metrics['demand_M_3'][1]:,.0f}")
+    
+    # --- CÓDIGO NUEVO: Gráfico de Barras de Consumo Histórico ---
+    st.write("") # Añade un espacio
+    
+    try:
+        # 1. Crear DataFrame con los datos
+        hist_data = [
+            {"Fecha": metrics['demand_M_3'][0], "Consumo": metrics['demand_M_3'][1], "Mes": metrics['demand_M_3'][0].strftime('%Y-%m')},
+            {"Fecha": metrics['demand_M_2'][0], "Consumo": metrics['demand_M_2'][1], "Mes": metrics['demand_M_2'][0].strftime('%Y-%m')},
+            {"Fecha": metrics['demand_M_1'][0], "Consumo": metrics['demand_M_1'][1], "Mes": metrics['demand_M_1'][0].strftime('%Y-%m')},
+            {"Fecha": metrics['demand_M_0'][0], "Consumo": metrics['demand_M_0'][1], "Mes": metrics['demand_M_0'][0].strftime('%Y-%m')},
+        ]
+        df_hist = pd.DataFrame(hist_data)
+        
+        # 2. Crear el gráfico de Altair
+        chart_hist = alt.Chart(df_hist).mark_line(point=True).encode(
+            x=alt.X('Mes:O', 
+                    sort=alt.EncodingSortField(field="Fecha", op="min", order='ascending'), # Ordena por fecha
+                    title='Mes'), 
+            y=alt.Y('Consumo:Q', title='Consumo Mensual'),
+            tooltip=[
+                alt.Tooltip('Mes:O'),
+                alt.Tooltip('Consumo:Q', format=',.0f')
+            ]
+        ).properties(
+            title='Consumo Histórico de Meses Usados para Simulación'
+        )
+        
+        st.altair_chart(chart_hist, use_container_width=True)
+        
+    except Exception as e:
+        st.warning(f"No se pudo generar el gráfico de consumo histórico: {e}")
+    # --- FIN DEL CÓDIGO NUEVO ---
 
     st.markdown("---")
     
-    st.subheader("Parámetros de Simulación (Calculados)") 
+    st.subheader("Parámetros de Simulación (Calculados)")
     col1, col2, col3 = st.columns(3)
     col1.metric("Lead Time (Días)", f"{lead_time_days}", help="Parámetro de entrada.")
     col2.metric("Safety Stock (SS)", f"{metrics['safety_stock']:,.0f}", f"Nivel Servicio {service_level_z}Z")

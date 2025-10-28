@@ -250,10 +250,15 @@ def show_arrivals_page():
         st.error(f"Error procesando datos de OC: {e}")
         st.stop()
 
+    # --- AÑADE ESTA LÍNEA AQUÍ ---
+    # Convertimos la OC a string para permitir la búsqueda parcial
+    df_oc_clean['Número de documento'] = df_oc_clean['Número de documento'].astype(str)
+    # -------------------------------
+
     # Empezamos con el filtro base (futuras y con cantidad)
     df_llegadas_detalle = df_oc_clean[
         (df_oc_clean['Cantidad'] > 0) & 
-        (df_oc_clean['Fecha de entrega de la línea'] >= today)
+        (df_oc_clean['Fecha de entrega de la línea'] >= today)  
     ].copy() # Hacemos una copia para evitar SettingWithCopyWarning
 
     # Aplicamos el filtro de SKU si no es "Todas"

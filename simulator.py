@@ -179,19 +179,22 @@ def run_inventory_simulation(
 
     # --- G. EMPAQUETAR RESULTADOS ---
     
-    # Diccionario con las métricas clave para retornar
     metrics = {
         'initial_stock': initial_stock,
         'monthly_demand_mean': monthly_demand_mean,
         'llegadas_count': len(llegadas_map),
         'safety_stock': safety_stock,
         'reorder_point': reorder_point,
-        'demand_M_0': (start_of_current_month.strftime('%B').capitalize(), demand_M_0),
-        'demand_M_1': (start_of_M_minus_1.strftime('%B').capitalize(), demand_M_1),
-        'demand_M_2': (start_of_M_minus_2.strftime('%B').capitalize(), demand_M_2),
-        'demand_M_3': (start_of_M_minus_3.strftime('%B').capitalize(), demand_M_3),
+        # --- MODIFICACIÓN AQUÍ ---
+        # Pasamos el objeto de fecha (start_of_...) en lugar de solo el nombre del mes
+        'demand_M_0': (start_of_current_month, demand_M_0),
+        'demand_M_1': (start_of_M_minus_1, demand_M_1),
+        'demand_M_2': (start_of_M_minus_2, demand_M_2),
+        'demand_M_3': (start_of_M_minus_3, demand_M_3),
+        # --- FIN DE LA MODIFICACIÓN ---
     }
 
     return df_sim, metrics, llegadas_map, df_llegadas_detalle
+
 
 
