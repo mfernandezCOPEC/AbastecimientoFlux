@@ -78,72 +78,103 @@ def display_metrics(metrics, lead_time_days, service_level_z):
 
 def generate_simulation_plot(df_sim, metrics, llegadas_map, sku_name, simulation_days):
     """
-    Genera un gráfico interactivo de Altair para la proyección de inventario.
+    Genera un gráfico interactivo de Altair con tooltips y una leyenda interactiva.
     
     Retorna:
     - chart (alt.Chart): El gráfico de Altair.
     """
     
-    # 1. Preparar el DataFrame principal (Inventario)
-    df_plot = df_sim.reset_index()
+    # --- 1. PREPARACIÓN DE DATOS ---
     
-    # 2. Preparar el DataFrame de llegadas (OCs)
+    # A. DataFrame para las líneas (Inventario, ROP, SS)
+    df_plot = df_sim.reset_index()
+    df_plot['ROP'] = metrics['reorder_point']
+    df_plot['SafetyStock'] = metrics['safety_stock']
+    
+    df_lines = df_plot.melt(
+        id_vars=['Fecha'],
+        value_vars=['NivelInventario', 'ROP', 'SafetyStock'],
+        var_name='Leyenda', 
+        value_name='Valor'
+    )
+    
+    # B. DataFrame para los puntos de llegada (OCs)
     df_llegadas = pd.DataFrame(list(llegadas_map.items()), columns=['Fecha', 'CantidadLlegada'])
     df_llegadas = pd.merge(df_llegadas, df_plot, on='Fecha', how='left')
+    df_llegadas['Leyenda'] = 'Llegada de OC' 
 
-    # 3. Gráfico base
-    base = alt.Chart(df_plot).encode(
+    # C. Línea de Cero
+    df_zero_line = pd.DataFrame({'y': [0]})
+
+    # --- 2. DEFINICIÓN DE CAPAS DEL GRÁFICO ---
+
+    # Definimos los colores y dominios
+    domain = ['NivelInventario', 'ROP', 'SafetyStock', 'Llegada de OC']
+    range_colors = ['#1f77b4', '#ff7f0e', '#9467bd', '#2ca02c'] 
+
+    # ----- INICIO DE LA CORRECCIÓN -----
+    # Ya no usamos 'base.from_data()'. 
+    # Creamos cada gráfico desde cero.
+
+    # Capa 1: Línea de Inventario
+    inventory_line = alt.Chart(
+        df_lines.loc[df_lines['Leyenda'] == 'NivelInventario']
+    ).mark_line(
+        interpolate='step-after', point=True
+    ).encode(
         x=alt.X('Fecha:T', title='Fecha', axis=alt.Axis(format="%Y-%m-%d")),
-    )
-
-    # 4. Línea de Inventario (CON TOOLTIP)
-    inventory_line = base.mark_line(point=True, interpolate='step-after').encode(
-        y=alt.Y('NivelInventario:Q', title='Unidades en Stock'),
+        y=alt.Y('Valor:Q', title='Unidades en Stock'),
+        color=alt.Color('Leyenda:N', scale=alt.Scale(domain=domain, range=range_colors), title='Leyenda'),
         tooltip=[
             alt.Tooltip('Fecha:T', format="%Y-%m-%d"), 
-            alt.Tooltip('NivelInventario:Q', title='Stock Proyectado', format=',.0f')
+            alt.Tooltip('Leyenda:N', title='Tipo'),
+            alt.Tooltip('Valor:Q', title='Stock Proyectado', format=',.0f')
         ]
-    ).properties(
-        title=f'Proyección de Inventario para {sku_name} ({simulation_days} días)'
     )
-
-    # 5. Puntos de Llegada (OCs)
-    arrival_points = alt.Chart(df_llegadas).mark_circle(color='green', size=100, opacity=0.8).encode(
+    
+    # Capa 2: Líneas de Referencia (ROP y SS)
+    reference_lines = alt.Chart(
+        df_lines.loc[df_lines['Leyenda'] != 'NivelInventario']
+    ).mark_line(
+        strokeDash=[5, 5]
+    ).encode(
+        x=alt.X('Fecha:T'), # El eje X se alinea con la capa 1
+        y=alt.Y('Valor:Q'),
+        color=alt.Color('Leyenda:N', scale=alt.Scale(domain=domain, range=range_colors)),
+        tooltip=[
+            alt.Tooltip('Leyenda:N', title='Tipo'),
+            alt.Tooltip('Valor:Q', title='Nivel', format=',.0f')
+        ]
+    )
+    
+    # Capa 3: Puntos de Llegada (OCs)
+    arrival_points = alt.Chart(df_llegadas).mark_circle(size=100, opacity=0.9).encode(
         x=alt.X('Fecha:T'),
         y=alt.Y('NivelInventario:Q'),
+        color=alt.Color('Leyenda:N', scale=alt.Scale(domain=domain, range=range_colors)),
         tooltip=[
             alt.Tooltip('Fecha:T', title='Llegada de OC', format="%Y-%m-%d"),
             alt.Tooltip('CantidadLlegada:Q', title='Cantidad Recibida', format=',.0f')
         ]
     )
-
-    # 6. Líneas de referencia (ROP y SS)
-    # ----- INICIO DE LA CORRECCIÓN -----
-    # Usamos alt.value() para asignar un valor constante al tooltip
-    rop_line = alt.Chart(pd.DataFrame({'y': [metrics['reorder_point']]})).mark_rule(
-        color='blue', strokeDash=[5, 5]
-    ).encode(
-        y='y',
-        tooltip=alt.value(f"Punto de Reorden (ROP): {metrics['reorder_point']:,.0f}")
-    )
-    
-    ss_line = alt.Chart(pd.DataFrame({'y': [metrics['safety_stock']]})).mark_rule(
-        color='purple', strokeDash=[5, 5]
-    ).encode(
-        y='y',
-        tooltip=alt.value(f"Safety Stock (SS): {metrics['safety_stock']:,.0f}")
-    )
     # ----- FIN DE LA CORRECCIÓN -----
 
-    # 7. Línea de Cero
-    zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(
+    # Capa 4: Línea de Cero (Esta no necesita la sintaxis 'from_data')
+    zero_line = alt.Chart(df_zero_line).mark_rule(
         color='red', strokeDash=[2, 2]
-    ).encode(y='y')
+    ).encode(
+        y='y',
+        tooltip=alt.value("Stock Cero") # Usamos alt.value(), que es compatible
+    )
 
-    # 8. Combinar todas las capas y hacerlo interactivo
-    final_chart = (inventory_line + arrival_points + rop_line + ss_line + zero_line).interactive()
+    # --- 3. COMBINAR Y RENDERIZAR ---
+    
+    final_chart = (inventory_line + reference_lines + arrival_points + zero_line).properties(
+        title=f'Proyección de Inventario para {sku_name} ({simulation_days} días)'
+    ).interactive() 
     
     return final_chart
+
 
 def prepare_end_of_month_table(df_sim):
     """
