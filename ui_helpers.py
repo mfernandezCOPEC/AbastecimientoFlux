@@ -308,13 +308,15 @@ def display_arrival_details(df_llegadas_detalle):
         df_display = df_llegadas_detalle[[
             'Fecha de entrega de la línea', 
             columna_oc, 
-            'Cantidad'
+            'Cantidad',
+            'Comentarios'
         ]].copy()
         
         df_display.rename(columns={
             'Fecha de entrega de la línea': 'Fecha Llegada',
             columna_oc: 'N° Orden Compra',
-            'Cantidad': 'Cantidad'
+            'Cantidad': 'Cantidad',
+            'Comentarios': 'Comentarios'
         }, inplace=True)
         
         df_display = df_display.sort_values(by='Fecha Llegada')
