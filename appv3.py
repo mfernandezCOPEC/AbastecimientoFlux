@@ -308,7 +308,11 @@ def main():
     """
     
     # --- 1. Configuración de la Página (Debe ser lo primero) ---
-    st.set_page_config(layout="wide")
+    st.set_page_config(
+        layout="wide",
+        page_title="ABASTECIMIENTO SUPREMO", # <--- Título de la pestaña
+        page_icon="COPEC-FLUX.svg"  # <--- Ícono de la pestaña (puedes usar un emoji)
+    )
 
     # --- 2. Inicialización del Estado de Página ---
     if 'page' not in st.session_state:
@@ -329,4 +333,5 @@ def main():
 
 # --- Punto de Entrada de Ejecución ---
 if __name__ == "__main__":
+
     main()
