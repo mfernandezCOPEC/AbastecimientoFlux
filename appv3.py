@@ -125,7 +125,7 @@ def show_simulator():
                 sku_name, 
                 dias_a_simular
             )
-            st.pyplot(fig)
+            st.altair_chart(fig, use_container_width=True)
             
             # --- F. Mostrar Tabla Fin de Mes (Req. 3) ---
             df_tabla_resultados = ui_helpers.prepare_end_of_month_table(df_sim)
