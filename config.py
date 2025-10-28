@@ -40,8 +40,10 @@ MAPEO_SKUS = {
     'EXI-008851': 'EXI-009392',
 
 
-    # Grupo 3 (SKUs -> EXI-009216) Paneles black 595
+    # Grupo 3 (SKUs -> EXI-009216) Paneles blue 595
     'EXI-008854': 'EXI-009216', # de 580
+    'EXI-008854': 'EXI-009216', # de 580
+
     # Inversores
     # inversores ongrid 1p5kw solis EXI-008660 
     'EXI-007037': 'EXI-008660', # huawei anterior 5Kw
