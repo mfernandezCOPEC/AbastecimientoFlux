@@ -202,40 +202,57 @@ def prepare_end_of_month_table(df_sim):
     return df_fin_de_mes[['Mes', 'Stock al Cierre']]
 
 # --- FUNCIÓN MODIFICADA (REFACTORIZADA) ---
-def display_order_recommendation(metrics, llegadas_map):
+def display_order_recommendation(metrics, llegadas_map, df_sim, lead_time_days):
     """
     Muestra la recomendación de pedido (UI).
-    La lógica de cálculo ahora está en 'analysis.py'.
+    La lógica de cálculo ahora está en 'analysis.py' y usa la proyección.
     """
     
     # --- 1. Llamar a la función de análisis ---
-    reco = analysis.calculate_order_recommendation(metrics, llegadas_map)
+    reco = analysis.calculate_order_recommendation(
+        metrics, llegadas_map, df_sim, lead_time_days
+    )
 
     # --- 2. Mostrar en la UI ---
     st.subheader("Recomendación de Abastecimiento 💡")
     
+    # Manejar caso de error (simulación muy corta)
+    if reco["status"] == "error":
+        st.error(f"**Error de Proyección:** {reco['error_message']}")
+        st.info("Aumente los 'Días a Simular' para que sean mayores o iguales al Lead Time.")
+        return
+
     col1, col2, col3 = st.columns(3)
-    col1.metric("Posición de Inventario", f"{reco['inventory_position']:,.0f}", 
-                help="Stock Inicial (Físico) + Stock en Tránsito (OCs Programadas)")
     
-    col2.metric("Punto de Reorden (ROP)", f"{reco['rop']:,.0f}", 
-                help="Si la 'Posición de Inventario' cae bajo este número, se debe pedir.")
+    col1.metric(
+        f"Stock Proyectado (en {reco['lead_time_days']} días)", 
+        f"{reco['projected_stock_at_lt']:,.0f}",
+        help=f"Nivel de stock simulado para el {reco['forecast_date'].strftime('%Y-%m-%d')}."
+    )
     
-    col3.metric("Nivel Objetivo (S)", f"{reco['target_stock_level']:,.0f}", 
-                help="El nivel de stock al que se desea llegar (SS + 1 Mes Demanda Prom.)")
+    col2.metric(
+        "Safety Stock (ss)", 
+        f"{reco['ss']:,.0f}", 
+        help="Si el stock proyectado cae bajo este número, se debe pedir."
+    )
+    
+    col3.metric(
+        "Recomendación de Pedido",
+        f"{reco['suggested_order_qty']:,.0f} uds.",
+        delta=f"{reco['suggested_order_qty']:,.0f} uds." if reco['status'] == 'success' else None,
+        delta_color="inverse"
+    )
+
 
     # Mostrar el veredicto final
     if reco['status'] == 'success':
-        st.success(f"**Recomendación:** Pedir **{reco['suggested_order_qty']:,.0f} unidades** ahora para reabastecer al Nivel Objetivo.")
-    
-    elif reco['status'] == 'warning':
-        st.warning(f"**Alerta:** La posición de inventario ({reco['inventory_position']:,.0f}) está por debajo del ROP, pero ya supera el Nivel Objetivo. No se sugiere un nuevo pedido.")
+        st.success(f"**Recomendación:** Pedir **{reco['suggested_order_qty']:,.0f} unidades**.\n\n"
+                   f"El stock proyectado ({reco['projected_stock_at_lt']:,.0f}) está por debajo del ss ({reco['ss']:,.0f}).")
     
     else: # 'info'
-        st.info(f"**No se necesita pedido.** La posición de inventario ({reco['inventory_position']:,.0f}) está por encima del Punto de Reorden ({reco['rop']:,.0f}).")
+        st.info(f"**No se necesita pedido.** El stock proyectado ({reco['projected_stock_at_lt']:,.0f}) se mantiene por encima del Punto de Reorden ({reco['ss']:,.0f}).")
 
 
-# --- FUNCIÓN SIN CAMBIOS ---
 def display_arrival_details(df_llegadas_detalle):
     """
     Muestra una tabla con el detalle de las próximas llegadas (OCs).

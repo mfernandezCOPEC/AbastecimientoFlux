@@ -80,7 +80,7 @@ service_level_str = st.sidebar.select_slider(
 )
 service_level_z = config.Z_SCORE_MAP[service_level_str]
 
-lead_time_days = st.sidebar.number_input("5. Lead Time (Días):", min_value=1, max_value=120, value=90)
+lead_time_days = st.sidebar.number_input("5. Lead Time (Días):", min_value=1, max_value=120, value=100)
 
 dias_a_simular = st.sidebar.number_input("6. Días a Simular:", min_value=30, max_value=365, value=90)
 
@@ -109,8 +109,8 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
         
         # --- C. Mostrar Recomendación de Pedido (Refactorizada) ---
         st.markdown("---") # Separador
-        ui_helpers.display_order_recommendation(metrics, llegadas_map)
-
+        ui_helpers.display_order_recommendation(metrics, llegadas_map, df_sim, lead_time_days)
+        
         # --- D. Mostrar Detalle de Llegadas ---
         st.markdown("---") # Separador
         ui_helpers.display_arrival_details(df_llegadas_detalle)
