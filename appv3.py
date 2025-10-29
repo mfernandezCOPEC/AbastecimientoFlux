@@ -1,6 +1,6 @@
 # --- ARCHIVO: app.py ---
 # (Esta es tu página principal / Menú)
-
+# buenas crack
 import streamlit as st
 import sys
 from pathlib import Path
@@ -60,4 +60,5 @@ col2.button("⚙️ Configuración", disabled=True, use_container_width=True)
 
 # Limpia la barra lateral (opcional)
 st.sidebar.markdown("---")
+
 st.sidebar.info("Seleccione una página arriba para comenzar.")
