@@ -80,9 +80,9 @@ service_level_str = st.sidebar.select_slider(
 )
 service_level_z = config.Z_SCORE_MAP[service_level_str]
 
-lead_time_days = st.sidebar.number_input("5. Lead Time (Días):", min_value=1, max_value=120, value=100)
+lead_time_days = st.sidebar.number_input("5. Lead Time (Días):", min_value=1, max_value=120, value=90)
 
-dias_a_simular = st.sidebar.number_input("6. Días a Simular:", min_value=30, max_value=365, value=90)
+dias_a_simular = st.sidebar.number_input("6. Días a Simular:", min_value=30, max_value=365, value=100)
 
 
 # --- 4. Disparador de Ejecución ---
