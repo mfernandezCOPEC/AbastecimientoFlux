@@ -123,20 +123,20 @@ else:
     
     # Reordenamos y Renombramos
     df_display = df_display[[
-        'Fecha de entrega de la línea',
         'Número de documento',
         'Número de artículo',
         'Nombre Artículo',
         'Cantidad',
+        'Fecha de entrega de la línea',
         'Comentarios'
     ]]
     
     df_display.rename(columns={
-        'Fecha de entrega de la línea': 'Fecha Llegada',
         'Número de documento': 'N° Orden Compra',
         'Número de artículo': 'SKU',
         'Nombre Artículo': 'Producto',
         'Cantidad': 'Cantidad',
+        'Fecha de entrega de la línea': 'Fecha Llegada',
         'Comentarios': 'Comentarios'
     }, inplace=True)
     
