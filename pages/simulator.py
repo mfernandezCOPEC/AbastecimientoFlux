@@ -131,7 +131,7 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
         # --- F. Mostrar Tabla Fin de Mes (Req. 3) ---
         df_tabla_resultados = ui_helpers.prepare_end_of_month_table(df_sim)
         st.subheader("Stock Simulado a Fin de Mes")
-        st.dataframe(df_tabla_resultados, use_container_width=True, hide_index=True)
+        st.dataframe(df_tabla_resultados, width='stretch', hide_index=True)
         
 else:
     # Mensaje de bienvenida inicial

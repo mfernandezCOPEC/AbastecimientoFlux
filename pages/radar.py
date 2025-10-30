@@ -64,7 +64,7 @@ with col4:
     lead_time_days = st.number_input("Lead Time (Días) (para ROP):", min_value=1, max_value=120, value=90)
 
 # --- 5. Botón de Ejecución ---
-if st.button("🚀 Generar Reporte de Radar", type="primary", use_container_width=True):
+if st.button("🚀 Generar Reporte de Radar", type="primary", width='stretch'):
     
     with st.spinner("Calculando KPIs para todos los SKUs... Esto puede tardar un momento."):
         df_radar = radar_engine.run_full_radar_analysis(
@@ -104,7 +104,7 @@ if st.button("🚀 Generar Reporte de Radar", type="primary", use_container_widt
         # Formatear el DataFrame para visualización
         st.dataframe(
             df_display.sort_values(by="DOS (Días)"), # Ordenar por el más crítico
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config={
                 "Stock Actual": st.column_config.NumberColumn(format="%.0f"),
@@ -125,7 +125,7 @@ if st.button("🚀 Generar Reporte de Radar", type="primary", use_container_widt
             data=st.session_state.df_radar_results,
             file_name=f"radar_inventario_{bodega_stock_sel}.csv",
             mime="text/csv",
-            use_container_width=True
+            width='stretch'
         )
 else:
     st.info("Ajuste los parámetros y presione 'Generar Reporte de Radar' para comenzar.")

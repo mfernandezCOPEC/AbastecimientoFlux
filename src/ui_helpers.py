@@ -194,7 +194,7 @@ def prepare_end_of_month_table(df_sim):
     Toma el DataFrame de simulación diaria y lo resume a fin de mes (Req. 3).
     (El contenido de esta función no cambia)
     """
-    df_fin_de_mes = df_sim['NivelInventario'].resample('M').last().reset_index()
+    df_fin_de_mes = df_sim['NivelInventario'].resample('ME').last().reset_index()
     
     df_fin_de_mes['Mes'] = df_fin_de_mes['Fecha'].dt.strftime('%Y-%m (%B)')
     df_fin_de_mes['Stock al Cierre'] = df_fin_de_mes['NivelInventario'].apply(lambda x: f"{x:,.0f}")

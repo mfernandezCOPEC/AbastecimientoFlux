@@ -146,4 +146,4 @@ else:
     df_display['Fecha Llegada'] = df_display['Fecha Llegada'].dt.strftime('%Y-%m-%d')
     df_display['Cantidad'] = df_display['Cantidad'].apply(lambda x: f"{x:,.0f}")
 
-    st.dataframe(df_display, use_container_width=True, hide_index=True)
+    st.dataframe(df_display, width='stretch', hide_index=True)

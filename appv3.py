@@ -84,18 +84,18 @@ with col1:
     with st.container(border=True, height=180): # height opcional para alinear
         st.subheader("📊 KPIs compradores")
         st.markdown("Visualización de tendencias históricas de consumo.")
-        st.button("Ver Dashboard", disabled=True, use_container_width=True)
+        st.button("Ver Dashboard", disabled=True, width='stretch')
 
 with col2:
     with st.container(border=True, height=180):
         st.subheader("⚙️ Configuración")
         st.markdown("Ajuste de parámetros globales y mapeo de SKUs.")
-        st.button("Ir a Configuración", disabled=True, use_container_width=True)
+        st.button("Ir a Configuración", disabled=True, width='stretch')
 
 
 # --- Configuración de la Barra Lateral (Sidebar) ---
 st.sidebar.markdown("---")
-st.sidebar.image("assets/COPEC-FLUX.svg", use_container_width=True) # <-- Novedad: Branding
+st.sidebar.image("assets/COPEC-FLUX.svg", width='stretch') # <-- Novedad: Branding
 st.sidebar.info("Seleccione una página arriba para comenzar.")
 st.sidebar.markdown("---")
 
