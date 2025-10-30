@@ -111,9 +111,9 @@ else:
 
     # Seleccionamos las columnas de interés
     df_display = df_llegadas_detalle[[
-        'Fecha de entrega de la línea',
         'Número de documento',
         'Número de artículo',
+        'Fecha de entrega de la línea',
         'Cantidad',
         'Comentarios'
     ]].copy()

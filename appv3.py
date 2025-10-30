@@ -82,7 +82,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     with st.container(border=True, height=180): # height opcional para alinear
-        st.subheader("📊 Dashboard de Ventas")
+        st.subheader("📊 KPIs compradores")
         st.markdown("Visualización de tendencias históricas de consumo.")
         st.button("Ver Dashboard", disabled=True, use_container_width=True)
 
@@ -102,5 +102,5 @@ st.sidebar.markdown("---")
 
 # --- Pie de Página (Footer) --- (Novedad)
 st.markdown("---")
-st.caption("© 2025 Copec S.A. | Todos los derechos reservados.")
-st.caption("Desarrollado por el equipo de Abastecimiento Flux.")
+st.caption("© 2025 Copec Flux S.A. | Todos los derechos reservados.")
+st.caption("Desarrollado por el equipo de Abastecimiento Copec Flux.")
